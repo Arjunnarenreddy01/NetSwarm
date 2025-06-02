@@ -59,3 +59,29 @@ def get_file_path(filename):
     """Get absolute path for a file in sending_file/files_to_send"""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(project_root, 'sending_file', 'files_to_send', filename)
+
+
+def reconstruct_file(metadata, chunk_dir, output_path):
+    """Reconstruct file from chunks using metadata"""
+    with open(output_path, 'wb') as f:
+        for chunk_info in sorted(metadata['chunks'], key=lambda x: x['index']):
+            chunk_path = os.path.join(chunk_dir, f"{chunk_info['hash']}.chunk")
+            if not os.path.exists(chunk_path):
+                raise FileNotFoundError(f"Missing chunk {chunk_info['index']}")
+            
+            with open(chunk_path, 'rb') as chunk_file:
+                f.write(chunk_file.read())
+    
+    # Verify final file hash
+    actual_hash = get_checksum(output_path)
+    if actual_hash != metadata['file_hash']:
+        os.remove(output_path)
+        raise ValueError("Reconstructed file hash mismatch")
+
+def save_chunk(chunk_hash, chunk_data, chunk_dir):
+    """Save a single chunk to disk"""
+    os.makedirs(chunk_dir, exist_ok=True)
+    chunk_path = os.path.join(chunk_dir, f"{chunk_hash}.chunk")
+    with open(chunk_path, 'wb') as f:
+        f.write(chunk_data)
+    return chunk_path
