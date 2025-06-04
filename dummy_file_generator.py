@@ -1,7 +1,7 @@
 # generate_dummy_file.py
 
 def generate_dummy_file(filename, size_in_mb=5):
-    line = "This is a dummy line for testing chunk-based reading.\n"
+    line = "This is a dummy line for testing chunk-based reading. part 22222222 II\n"
     line_bytes = len(line.encode('utf-8'))
 
     total_lines = (size_in_mb * 1024 * 1024) // line_bytes
@@ -11,4 +11,4 @@ def generate_dummy_file(filename, size_in_mb=5):
             f.write(line)
 
 if __name__ == "__main__":
-    generate_dummy_file("myfile.txt")
+    generate_dummy_file("myfile2.txt")
