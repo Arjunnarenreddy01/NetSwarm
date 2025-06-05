@@ -3,61 +3,73 @@
   "file_size": 5339950,
   "file_hash": "eb689e3029e33ebe98f32f0f1a20e795487d7f2c51b3e93d8ef9960f3bf253a7",
   "total_chunks": 11,
+  "unique_chunks": 11,
   "chunks": [
     {
       "index": 0,
       "hash": "32d46ed699acd174fbd6760bdf2455ad96096441442f049d1efaf13d4f9742f1",
-      "size": 524288
+      "size": 524288,
+      "source_index": 0
     },
     {
       "index": 1,
       "hash": "ee5a7fb25282d8d3671cf6cddb802f290392846d6b6010ccdbc6a5846cda8c80",
-      "size": 524288
+      "size": 524288,
+      "source_index": 1
     },
     {
       "index": 2,
       "hash": "5ead4df5fadbda4ebe6681b68023bbfacadb4c89c132f0d594c044b634ba2ce8",
-      "size": 524288
+      "size": 524288,
+      "source_index": 2
     },
     {
       "index": 3,
       "hash": "068f38a44da87b6b6bbe39ab2fd48f2c1c84868179fa56110b50f5da42ecdd78",
-      "size": 524288
+      "size": 524288,
+      "source_index": 3
     },
     {
       "index": 4,
       "hash": "8599b3bf5f0589ac73edb1f37b82fc89709c827daeb1ede0ef25033f329e85c8",
-      "size": 524288
+      "size": 524288,
+      "source_index": 4
     },
     {
       "index": 5,
       "hash": "b556f023dd3a5172aafb913af9d1cba37922a5e8704fd08781a76624f2a30f93",
-      "size": 524288
+      "size": 524288,
+      "source_index": 5
     },
     {
       "index": 6,
       "hash": "cf48679ec69434946f5bc84cd51896ec5393a2dd546402ef08c6303f2f722ae9",
-      "size": 524288
+      "size": 524288,
+      "source_index": 6
     },
     {
       "index": 7,
       "hash": "1a5c57890f752786ed0f78b0f1ec5814a89785aa84c840667da6f8b99748d127",
-      "size": 524288
+      "size": 524288,
+      "source_index": 7
     },
     {
       "index": 8,
       "hash": "111da955859537b08f88b0615567b0f4b686ad9d3ae85731efdaf0d4db989bd2",
-      "size": 524288
+      "size": 524288,
+      "source_index": 8
     },
     {
       "index": 9,
       "hash": "c3266572f9aa2ab11189f918a30e3ee69f455ebbd7ce4a59ca5d0f624a7ffb0a",
-      "size": 524288
+      "size": 524288,
+      "source_index": 9
     },
     {
       "index": 10,
       "hash": "290ca2d5185ea228287bd4940d78d6b461e10c0fe0d60307dd2e58ec3e487096",
-      "size": 97070
+      "size": 97070,
+      "source_index": 10
     }
   ]
 }

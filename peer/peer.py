@@ -7,6 +7,7 @@ import threading
 import requests
 import queue
 from tqdm import tqdm
+import atexit
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -90,11 +91,20 @@ def send_file(filename):
     metadata = chunk_file(file_path)
     save_nmeta_file(metadata, BASE_DIR)
     print(f"[+] Generated metadata for {metadata['total_chunks']} chunks")
-    
+
+    # Start chunk server
     chunk_server_port = get_free_port()
+    global CHUNK_SERVER_PORT
+    CHUNK_SERVER_PORT = chunk_server_port
+
     threading.Thread(target=start_chunk_server, args=(chunk_server_port,), daemon=True).start()
     print(f"[+] Started chunk server on port {chunk_server_port}")
-
+    
+    metadata_port = get_free_port()
+    # if os.path.exists(CHUNK_DIR):
+    #     for f in os.listdir(CHUNK_DIR):
+    #         os.remove(os.path.join(CHUNK_DIR, f))
+    # Save chunks
     with open(file_path, "rb") as f:
         for chunk_info in metadata['chunks']:
             chunk_data = f.read(chunk_info['size'])
@@ -102,13 +112,13 @@ def send_file(filename):
             save_chunk(chunk_hash, chunk_data, CHUNK_DIR)
             print(f"[DEBUG] Saved chunk {chunk_info['index']} ({chunk_hash})")
 
-    # Metadata Server Thread
+    # Metadata server thread
     def serve_metadata():
         server = socket.socket()
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((host, METADATA_PORT))
+        server.bind((host, metadata_port))
         server.listen(5)
-        print(f"[+] Metadata server on port {METADATA_PORT}")
+        print(f"[+] Metadata server on port {metadata_port}")
         while True:
             try:
                 conn, addr = server.accept()
@@ -124,22 +134,41 @@ def send_file(filename):
 
     threading.Thread(target=serve_metadata, daemon=True).start()
 
-    # Send file on PORT
+    # Cleanup on exit
+    def cleanup():
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"[CLEANUP] Removed original file: {file_path}")
+            meta_file = os.path.join(BASE_DIR, f"{filename}.nmeta")
+            if os.path.exists(meta_file):
+                os.remove(meta_file)
+                print(f"[CLEANUP] Removed metadata file: {meta_file}")
+            for f in os.listdir(CHUNK_DIR):
+                os.remove(os.path.join(CHUNK_DIR, f))
+            print(f"[CLEANUP] Removed all chunk files from {CHUNK_DIR}")
+        except Exception as e:
+            print(f"[!] Cleanup failed: {e}")
+
+    atexit.register(cleanup)
+
+    # Prepare to send file directly
     PORT = get_free_port()
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, PORT))
     s.listen(1)
     print(f"[+] Waiting for connection on port {PORT}...")
-    
+
     # Register with Bootstrap Server
     try:
-        peer_id = f"peer_{PORT}"  # or generate UUID, or hash
-        bootstrap_url = "http://localhost:8000/register"  # change to your real IP if needed
+        peer_id = f"peer_{PORT}"
+        bootstrap_url = "http://localhost:8000/register"
 
         payload = {
             "peer_id": peer_id,
             "port": PORT,
+            "metadata_port": metadata_port, 
             "chunk_port": chunk_server_port,
             "files": [filename]
         }
@@ -149,6 +178,7 @@ def send_file(filename):
     except Exception as e:
         print(f"[!] Failed to register with bootstrap server: {e}")
 
+    # Actual file transfer
     client_socket, address = s.accept()
     print(f"[+] Connected to {address}")
 
@@ -221,7 +251,7 @@ def start_chunk_server(port):
 
 def get_metadata_from_peer(peer):
     try:
-        with socket.create_connection((peer['ip'], METADATA_PORT), timeout=5) as s:
+        with socket.create_connection((peer['ip'], peer['metadata_port']), timeout=5) as s:
             s.settimeout(5)  # Add timeout here too
             s.sendall(b"GET_META")
             response = b""
@@ -274,23 +304,44 @@ def download_chunk(peer, chunk):
 def reconstruct_file(metadata):
     print("[*] Reconstructing file...")
     file_path = os.path.join(RECEIVED_DIR, metadata['file_name'])
+    
     with open(file_path, "wb") as f:
-        for chunk in sorted(metadata['chunks'], key=lambda c: c['index']):
-            path = os.path.join(RECEIVED_CHUNKS, f"{chunk['hash']}.chunk")
-            if os.path.exists(path):
-                with open(path, "rb") as cf:
+        # Create virtual chunk sequence
+        virtual_chunks = [None] * metadata['total_chunks']
+        
+        # First pass: Map all chunks to their source
+        for chunk in metadata['chunks']:
+            source_idx = chunk['source_index']
+            virtual_chunks[chunk['index']] = source_idx
+        
+        # Second pass: Write in order using source chunks
+        for idx in range(metadata['total_chunks']):
+            source_idx = virtual_chunks[idx]
+            source_chunk = metadata['chunks'][source_idx]
+            chunk_path = os.path.join(RECEIVED_CHUNKS, f"{source_chunk['hash']}.chunk")
+            
+            if os.path.exists(chunk_path):
+                with open(chunk_path, "rb") as cf:
                     f.write(cf.read())
+            else:
+                print(f"[-] Missing source chunk {source_idx} for position {idx}")
+    
+    # Final validation
     if get_checksum(file_path) == metadata['file_hash']:
         print("[+] File reconstructed successfully.")
     else:
-        print("[-] Hash mismatch. Reconstruction may be corrupted.")
+        print("[-] Hash mismatch! File corrupted.")
 
 
 def download_from_multiple_peers(metadata, peers):
     # print("debug 2")
     os.makedirs(RECEIVED_CHUNKS, exist_ok=True)
-    chunk_queue = queue.Queue()
+    unique_chunks = {}
     for chunk in metadata['chunks']:
+        unique_chunks[chunk['source_index']] = chunk
+        
+    chunk_queue = queue.Queue()
+    for _, chunk in unique_chunks.items():
         chunk_queue.put(chunk)
 
     downloaded = set()
@@ -300,14 +351,17 @@ def download_from_multiple_peers(metadata, peers):
         while True:
             try:
                 chunk = chunk_queue.get_nowait()
+                # if os.path.exists(os.path.join(RECEIVED_CHUNKS, f"{chunk['hash']}.chunk")):
+                #     chunk_queue.task_done()
+                #     continue
             except queue.Empty:
                 break
                 
             try:
                 # Check if already downloaded
-                with lock:
-                    if chunk['hash'] in downloaded:
-                        continue  # Skip if already downloaded
+                # with lock:
+                #     if chunk['hash'] in downloaded:
+                #         continue  # Skip if already downloaded
 
                 # Attempt download
                 for peer in peers:
@@ -328,88 +382,100 @@ def download_from_multiple_peers(metadata, peers):
     for t in threads:
         t.join()
     # print("debug 7")
-    if len(downloaded) == len(metadata['chunks']):
+    if len(downloaded) == len(unique_chunks):
         reconstruct_file(metadata)
     else:
         print(f"[-] Missing {len(metadata['chunks']) - len(downloaded)} chunks.")
 
 
-def receive_file():
+def receive_file(use_multiple, selected_peer_indexes):
     # Step 1: Fetch all registered peers from bootstrap server
     peers = get_available_peers()
     if not peers:
         print("No peers available to download from.")
         return
 
-    # Step 2: Ask user to select one or multiple peers
-    use_multiple = input("Use multiple peers? (y/n): ").strip().lower() == 'y'
+    peer_ids = list(peers.keys())
 
     if use_multiple:
         print("Available peers:")
         for idx, (peer_id, info) in enumerate(peers.items()):
             print(f"{idx}: {peer_id} @ {info['ip']}:{info['port']} - Files: {', '.join(info['files'])}")
 
-        selected_indexes = input("Enter peer indices (comma-separated): ").strip().split(',')
-        peer_ids = list(peers.keys())
         selected_peers = []
-        for idx_str in selected_indexes:
-            idx=int(idx_str.strip())
-            peer_info = peers[peer_ids[idx]]
-            selected_peers.append({
-                "ip": peer_info['ip'],
-                "chunk_port": peer_info['chunk_port']  # ADD THIS
-            })
+        for idx_str in selected_peer_indexes:
+            try:
+                idx = int(idx_str.strip())
+                if idx < 0 or idx >= len(peer_ids):
+                    print(f"Index {idx} out of range. Skipping.")
+                    continue
+                peer_info = peers[peer_ids[idx]]
+                selected_peers.append({
+                    "ip": peer_info['ip'],
+                    "chunk_port": peer_info['chunk_port'],
+                    "metadata_port": peer_info['metadata_port']
+                })
+            except ValueError:
+                print(f"Invalid index: {idx_str}. Skipping.")
+
         if not selected_peers:
             print("No valid peers selected.")
             return
 
-        # Get metadata from the first selected peer (or extend logic for multiple metadata)
         metadata = get_metadata_from_peer({
             "ip": selected_peers[0]["ip"],
-            "chunk_port": peers[peer_ids[int(selected_indexes[0])]]["chunk_port"]
+            "chunk_port": selected_peers[0]["chunk_port"],
+            "metadata_port":selected_peers[0]["metadata_port"]
         })
         if not metadata:
             print("Failed to fetch metadata from selected peer.")
             return
 
-        # Download using your existing multi-peer function
-        # print("debug 1 pt 1")
         peers_list = [{
             "ip": peer_info['ip'],
             "chunk_port": peer_info['chunk_port']
         } for peer_info in selected_peers]
+
         download_from_multiple_peers(metadata, peers_list)
 
     else:
-        # Single peer selection
-        selected_peer = select_peer(peers)  # reuse the function from before
-        if not selected_peer:
-            print("No peer selected.")
+        try:
+            idx = int(selected_peer_indexes[0].strip())
+            if idx < 0 or idx >= len(peer_ids):
+                print("Selected peer index out of range.")
+                return
+            selected_peer = peers[peer_ids[idx]]
+            peer_info = {
+                "ip": selected_peer['ip'],
+                "chunk_port": selected_peer['chunk_port']
+            }
+        except (IndexError, ValueError):
+            print("Invalid index for single peer.")
             return
 
-        metadata = get_metadata_from_peer(selected_peer)
+        metadata = get_metadata_from_peer(peer_info)
         if not metadata:
             print("Failed to fetch metadata from peer.")
             return
-        # print("debug 1 pt 2")
-        download_from_multiple_peers(metadata, [{
-            "ip": selected_peer['ip'],
-            "chunk_port": selected_peer['chunk_port']
-        }])
+
+        download_from_multiple_peers(metadata, [peer_info])
+
 
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--send', help="Send a file")
-    parser.add_argument('--receive', action='store_true', help="Receive a file")
+    parser.add_argument('--receive', nargs=2, metavar=('USE_MULTIPLE', 'PEERS'),help="Receive a file. Example: --receive true 0,1,2")
     parser.add_argument('--server', action='store_true', help="Run chunk server")
     args = parser.parse_args()
 
     if args.send:
         send_file(args.send)
     elif args.receive:
-        receive_file()
+        use_multiple = args.receive[0].lower() == 'true'
+        selected_ids = args.receive[1].split(',') if args.receive[1] else []
+        receive_file(use_multiple, selected_ids)
     elif args.server:
         # Start standalone chunk server on dynamic port
         port = get_free_port()

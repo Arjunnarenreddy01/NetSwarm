@@ -19,22 +19,29 @@ def compute_chunk_hash(data):
     return hashlib.sha256(data).hexdigest()
 
 def chunk_file(file_path):
-    """Split file into chunks and compute hashes"""
+    """Split file into chunks with duplicate detection"""
     chunks = []
+    seen_hashes = {}
     file_hash = hashlib.sha256()
-    chunk_index = 0
     
     with open(file_path, 'rb') as f:
+        chunk_index = 0
         while True:
             chunk_data = f.read(CHUNK_SIZE)
             if not chunk_data:
                 break
                 
             chunk_hash = compute_chunk_hash(chunk_data)
+            
+            # Track first occurrence of each hash
+            if chunk_hash not in seen_hashes:
+                seen_hashes[chunk_hash] = chunk_index
+            
             chunks.append({
                 'index': chunk_index,
                 'hash': chunk_hash,
-                'size': len(chunk_data)
+                'size': len(chunk_data),
+                'source_index': seen_hashes[chunk_hash]  # Reference first occurrence
             })
             file_hash.update(chunk_data)
             chunk_index += 1
@@ -44,6 +51,7 @@ def chunk_file(file_path):
         'file_size': os.path.getsize(file_path),
         'file_hash': file_hash.hexdigest(),
         'total_chunks': len(chunks),
+        'unique_chunks': len(seen_hashes),  # Track distinct chunks
         'chunks': chunks
     }
 
