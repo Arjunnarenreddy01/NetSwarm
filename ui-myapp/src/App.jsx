@@ -109,7 +109,7 @@ function App() {
 
     // Wait for reconstruction to complete (adjust delay if needed)
     setTimeout(async () => {
-      const filename = 'myfile.txt'; // Replace this with your actual reconstructed filename
+      const filename = response.data.filename; // Replace this with your actual reconstructed filename
       try {
         const res = await axios.get(`http://localhost:5000/download/${filename}`, {
           responseType: 'blob'

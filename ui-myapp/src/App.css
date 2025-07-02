@@ -15,6 +15,16 @@
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+}
+
 
 body {
   background-color: #f5f7fa;
@@ -23,9 +33,9 @@ body {
 
 .app {
   display: flex;
+  justify-content: center;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -76,9 +86,14 @@ nav button:hover:not(.active) {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  display: flex;
+  justify-content: center;
 }
 
 .dashboard h2, .send-file h2, .receive-file h2 {
+  width: 100%;
+  
   margin-bottom: 20px;
   color: var(--dark);
   padding-bottom: 10px;
@@ -174,6 +189,8 @@ nav button:hover:not(.active) {
 .drop-zone {
   border: 2px dashed #ccc;
   border-radius: 8px;
+  width: 700px;
+  height: 250px;
   padding: 40px 20px;
   text-align: center;
   margin: 20px 0;

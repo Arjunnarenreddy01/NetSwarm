@@ -1,0 +1,15 @@
+{
+  "file_name": "temp_8756467d1df64c18a17fdcd95ed41bef_document.pdf",
+  "file_size": 188964,
+  "file_hash": "a4c55ff466a7c072f5fbbc5165c2e7a622b492c9635d17aea57e8b8b8bd91de5",
+  "total_chunks": 1,
+  "unique_chunks": 1,
+  "chunks": [
+    {
+      "index": 0,
+      "hash": "a4c55ff466a7c072f5fbbc5165c2e7a622b492c9635d17aea57e8b8b8bd91de5",
+      "size": 188964,
+      "source_index": 0
+    }
+  ]
+}

@@ -9,12 +9,13 @@ import json
 import requests
 from flask import send_file
 
-RECEIVED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'received_file')
+RECEIVED_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'received_files')
 
 app = Flask(__name__)
 CORS(app)
 
 def get_available_peers():
+    """Helps discover all available peers dynamically"""
     try:
         res = requests.get("http://localhost:8000/peers")
         if res.status_code == 200:
@@ -39,6 +40,7 @@ def get_available_peers():
 # Proxy peer requests to bootstrap server
 @app.route('/peers', methods=['GET'])
 def get_peers():
+    """Exposes peer data to the frontend or CLI clients through the controller."""
     try:
         bootstrap_url = "http://localhost:8000/peers"
         res = requests.get(bootstrap_url)
@@ -89,11 +91,12 @@ def send_file_route():  # Renamed to avoid conflict
 def receive_file():
     data = request.json
     use_multiple = data.get('useMultiple', False)
-    selected_peers = data.get('peers', [])  # These are peer *names*
+    selected_peers = data.get('peers', []) # These are peer *names*
 
     # Get peer list from bootstrap
     all_peers = get_available_peers()
     peer_ids = list(all_peers.keys())
+    filename = all_peers[selected_peers[0]]['files'][0]
 
     # Convert selected peer IDs to their corresponding indexes
     selected_indexes = []
@@ -114,7 +117,10 @@ def receive_file():
     # Run in background
     threading.Thread(target=lambda: subprocess.run(cmd, check=True)).start()
 
-    return jsonify({"message": "File download started"}), 202
+    return jsonify({
+        "message": "File download started",
+        "filename": filename  # ✅ This is now returned to frontend
+    }), 202
 
 
 @app.route('/download/<filename>', methods=['GET'])
