@@ -296,7 +296,13 @@ function App() {
                   <div 
                     key={peerId} 
                     className={`peer-card ${selectedPeers.includes(peerId) ? 'selected' : ''}`}
-                    onClick={() => useMultiple && togglePeerSelection(peerId)}
+                    onClick={() => {
+                      if (useMultiple) {
+                        togglePeerSelection(peerId);
+                      } else {
+                        setSelectedPeers([peerId]);
+                      }
+                    }}
                   >
                     <div className="peer-header">
                       <div className="peer-status"></div>

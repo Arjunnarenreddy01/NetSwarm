@@ -1,0 +1,27 @@
+{
+  "file_name": "temp_5a98fae8a5314c70a76129eb18ae0b67_RegCard_btech_internship(1).pdf",
+  "file_size": 1362921,
+  "file_hash": "3fe7da4a8f1c9576dbb8cdf7df685a7060f4289779d21952767a3bad878646fc",
+  "total_chunks": 3,
+  "unique_chunks": 3,
+  "chunks": [
+    {
+      "index": 0,
+      "hash": "77cd3f96e63eeda790beb3e5a02e43ac41428454a19ae392f7b2bfef0f822500",
+      "size": 524288,
+      "source_index": 0
+    },
+    {
+      "index": 1,
+      "hash": "5e1bd2c9d277e2f4d24dc533630052c417f6bbe2936df44392db18488281de8f",
+      "size": 524288,
+      "source_index": 1
+    },
+    {
+      "index": 2,
+      "hash": "cc5ce87d4c8c10c29150d6dd421b6cfa5b032cdaa61327c64a02e91fc0d7cf0c",
+      "size": 314345,
+      "source_index": 2
+    }
+  ]
+}
