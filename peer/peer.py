@@ -36,6 +36,11 @@ RECEIVED_DIR = os.path.join("received_files")
 RECEIVED_CHUNKS = os.path.join(RECEIVED_DIR, "chunks")
 
 def get_free_port():
+    """Gets a port in system
+
+    Returns:
+        _type_: returns a port 
+    """
     s = socket.socket()
     s.bind(('', 0))
     port = s.getsockname()[1]
@@ -43,33 +48,32 @@ def get_free_port():
     return port
 
 
-def select_peer(peers):
-    if not peers:
-        return None
-    peer_keys = list(peers.keys())
-    print("\nSelect a peer by index:")
-    for idx, peer_id in enumerate(peer_keys):
-        print(f"{idx}: {peer_id} @ {peers[peer_id]['ip']}:{peers[peer_id]['port']}")
-    choice = int(input("Enter index: "))
-    return {
-        "ip": peers[peer_keys[choice]]['ip'],
-        "chunk_port": peers[peer_keys[choice]]['chunk_port']
-    }
+# def select_peer(peers):
+#     if not peers:
+#         return None
+#     peer_keys = list(peers.keys())
+#     print("\nSelect a peer by index:")
+#     for idx, peer_id in enumerate(peer_keys):
+#         print(f"{idx}: {peer_id} @ {peers[peer_id]['ip']}:{peers[peer_id]['port']}")
+#     choice = int(input("Enter index: "))
+#     return {
+#         "ip": peers[peer_keys[choice]]['ip'],
+#         "chunk_port": peers[peer_keys[choice]]['chunk_port']
+#     }
 
 
 def get_available_peers():
+    """Gets peers from backend bootstrap
+
+    Returns:
+        _type_: list of peers
+    """
     try:
         res = requests.get("http://localhost:8000/peers")
         if res.status_code == 200:
             peers = res.json()
             if not peers:
-                # print("No peers are currently registered.")
                 return {}
-            # print("Available Peers:")
-            # for peer_id, info in peers.items():
-            #     print(f"- {peer_id} @ {info['ip']}:{info['port']}")
-            #     print(f"  Chunk Port: {info['chunk_port']}")
-            #     print(f"  Files: {', '.join(info['files'])}")
             return peers
         else:
             print("Failed to fetch peers from bootstrap server.")
