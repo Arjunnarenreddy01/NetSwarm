@@ -43,7 +43,6 @@ body {
 .header {
   text-align: center;
   padding: 20px 0;
-  border-bottom: 1px solid #ddd;
   margin-bottom: 30px;
 }
 
@@ -86,7 +85,8 @@ nav button:hover:not(.active) {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
+  max-width: 830px;
+  margin: auto;
   display: flex;
   justify-content: center;
 }
@@ -182,9 +182,14 @@ nav button:hover:not(.active) {
   margin-top: 5px;
 }
 
-.peer-files li {
-  margin-bottom: 3px;
+.peer-files ul li {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+  font-size: 0.875rem; /* optional: make filenames smaller */
 }
+
 
 .drop-zone {
   border: 2px dashed #ccc;
@@ -350,4 +355,43 @@ nav button:hover:not(.active) {
   background-color: var(--secondary);
   border-radius: 50%;
   margin-right: 5px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.card-glass {
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.animate-fadein {
+  animation: fadein 0.5s ease-in;
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

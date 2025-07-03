@@ -1,0 +1,45 @@
+{
+  "file_name": "temp_e7e67cccd19140c1960f3f8580aecaaa_SOF IMO.pdf",
+  "file_size": 2833258,
+  "file_hash": "cb27828fc7d450dcde54c569b751a2341b0cd4d05f16aabe859043439771a727",
+  "total_chunks": 6,
+  "unique_chunks": 6,
+  "chunks": [
+    {
+      "index": 0,
+      "hash": "dd6988775839ec39252a2b2de16c94b47d584eb04a1b33576719eafe175a2ebe",
+      "size": 524288,
+      "source_index": 0
+    },
+    {
+      "index": 1,
+      "hash": "61e3f4d2f1881def8987f477e794e3e9db98827ed1fbc9acb1fd153529f64b40",
+      "size": 524288,
+      "source_index": 1
+    },
+    {
+      "index": 2,
+      "hash": "828fad2d343e29a4f75f1224b71a0d2b96847ddf61d3c6840c0ce57b4b02620d",
+      "size": 524288,
+      "source_index": 2
+    },
+    {
+      "index": 3,
+      "hash": "28bc5331a861a5ca2d4b01971578c1a18bc73c967c2ea8a1416483d9e0ee96af",
+      "size": 524288,
+      "source_index": 3
+    },
+    {
+      "index": 4,
+      "hash": "7a9710ec478f00f894a64e157cc67ecedaebaa4c0a4e31cbc6a7a8d4bddc5299",
+      "size": 524288,
+      "source_index": 4
+    },
+    {
+      "index": 5,
+      "hash": "f5329bd810350ca58b4086f9a58980da683f5461ff70fb0478ca4595d49dc95b",
+      "size": 211818,
+      "source_index": 5
+    }
+  ]
+}

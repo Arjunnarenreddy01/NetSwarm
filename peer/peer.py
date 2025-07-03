@@ -63,13 +63,13 @@ def get_available_peers():
         if res.status_code == 200:
             peers = res.json()
             if not peers:
-                print("No peers are currently registered.")
+                # print("No peers are currently registered.")
                 return {}
-            print("Available Peers:")
-            for peer_id, info in peers.items():
-                print(f"- {peer_id} @ {info['ip']}:{info['port']}")
-                print(f"  Chunk Port: {info['chunk_port']}")
-                print(f"  Files: {', '.join(info['files'])}")
+            # print("Available Peers:")
+            # for peer_id, info in peers.items():
+            #     print(f"- {peer_id} @ {info['ip']}:{info['port']}")
+            #     print(f"  Chunk Port: {info['chunk_port']}")
+            #     print(f"  Files: {', '.join(info['files'])}")
             return peers
         else:
             print("Failed to fetch peers from bootstrap server.")
@@ -389,7 +389,6 @@ def download_from_multiple_peers(metadata, peers):
 
 
 def receive_file(use_multiple, selected_peer_indexes):
-    # Step 1: Fetch all registered peers from bootstrap server
     peers = get_available_peers()
     if not peers:
         print("No peers available to download from.")
@@ -477,7 +476,6 @@ def main():
         selected_ids = args.receive[1].split(',') if args.receive[1] else []
         receive_file(use_multiple, selected_ids)
     elif args.server:
-        # Start standalone chunk server on dynamic port
         port = get_free_port()
         print(f"[*] Starting standalone chunk server on port {port}")
         start_chunk_server(port)
