@@ -138,24 +138,6 @@ def send_file(filename):
 
     threading.Thread(target=serve_metadata, daemon=True).start()
 
-    # Cleanup on exit
-    def cleanup():
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                print(f"[CLEANUP] Removed original file: {file_path}")
-            meta_file = os.path.join(BASE_DIR, f"{filename}.nmeta")
-            if os.path.exists(meta_file):
-                os.remove(meta_file)
-                print(f"[CLEANUP] Removed metadata file: {meta_file}")
-            for f in os.listdir(CHUNK_DIR):
-                os.remove(os.path.join(CHUNK_DIR, f))
-            print(f"[CLEANUP] Removed all chunk files from {CHUNK_DIR}")
-        except Exception as e:
-            print(f"[!] Cleanup failed: {e}")
-
-    atexit.register(cleanup)
-
     # Prepare to send file directly
     PORT = get_free_port()
     s = socket.socket()
@@ -182,24 +164,7 @@ def send_file(filename):
     except Exception as e:
         print(f"[!] Failed to register with bootstrap server: {e}")
 
-    # Actual file transfer
     client_socket, address = s.accept()
-    print(f"[+] Connected to {address}")
-
-    client_socket.send(f"{json.dumps(metadata)}{SEPARATOR}".encode())
-
-    with open(file_path, "rb") as f, tqdm(total=metadata['file_size'], unit="B", unit_scale=True) as progress:
-        for chunk_info in metadata['chunks']:
-            chunk_data = f.read(chunk_info['size'])
-            if compute_chunk_hash(chunk_data) != chunk_info['hash']:
-                print(f"[-] Hash mismatch for chunk {chunk_info['index']} — skipping")
-                continue
-            header = f"{chunk_info['index']}{CHUNK_SEPARATOR}{chunk_info['hash']}{CHUNK_SEPARATOR}{chunk_info['size']}{SEPARATOR}"
-            client_socket.send(header.encode())
-            client_socket.sendall(chunk_data)
-            progress.update(len(chunk_data))
-
-    print(f"[+] File sent. Chunks available on port {CHUNK_SERVER_PORT}")
     client_socket.close()
     s.close()
 
