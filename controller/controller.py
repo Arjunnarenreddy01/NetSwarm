@@ -23,11 +23,11 @@ def get_available_peers():
             if not peers:
                 print("No peers are currently registered.")
                 return {}
-            print("Available Peers:")
-            for peer_id, info in peers.items():
-                print(f"- {peer_id} @ {info['ip']}:{info['port']}")
-                print(f"  Chunk Port: {info['chunk_port']}")
-                print(f"  Files: {', '.join(info['files'])}")
+            # print("Available Peers:")
+            # for peer_id, info in peers.items():
+            #     print(f"- {peer_id} @ {info['ip']}:{info['port']}")
+            #     print(f"  Chunk Port: {info['chunk_port']}")
+            #     print(f"  Files: {', '.join(info['files'])}")
             return peers
         else:
             print("Failed to fetch peers from bootstrap server.")

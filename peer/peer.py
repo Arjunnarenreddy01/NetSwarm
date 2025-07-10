@@ -303,7 +303,6 @@ def reconstruct_file(metadata):
 
 
 def download_from_multiple_peers(metadata, peers):
-    # print("debug 2")
     os.makedirs(RECEIVED_CHUNKS, exist_ok=True)
     unique_chunks = {}
     for chunk in metadata['chunks']:
@@ -315,24 +314,14 @@ def download_from_multiple_peers(metadata, peers):
 
     downloaded = set()
     lock = threading.Lock()
-    # print("debug 3")
     def worker():
         while True:
             try:
                 chunk = chunk_queue.get_nowait()
-                # if os.path.exists(os.path.join(RECEIVED_CHUNKS, f"{chunk['hash']}.chunk")):
-                #     chunk_queue.task_done()
-                #     continue
             except queue.Empty:
                 break
                 
             try:
-                # Check if already downloaded
-                # with lock:
-                #     if chunk['hash'] in downloaded:
-                #         continue  # Skip if already downloaded
-
-                # Attempt download
                 for peer in peers:
                     if download_chunk(peer, chunk):
                         with lock:
@@ -341,16 +330,12 @@ def download_from_multiple_peers(metadata, peers):
             finally:
                 # Always mark task as done
                 chunk_queue.task_done()
-    # print("debug 4")
     threads = [threading.Thread(target=worker) for _ in range(min(4, len(peers) * 2))]
     for t in threads:
         t.start()
-    # print("debug 5")
     chunk_queue.join()
-    # print("debug 6")
     for t in threads:
         t.join()
-    # print("debug 7")
     if len(downloaded) == len(unique_chunks):
         reconstruct_file(metadata)
     else:
@@ -366,17 +351,17 @@ def receive_file(use_multiple, selected_peer_indexes):
     peer_ids = list(peers.keys())
 
     if use_multiple:
-        print("Available peers:")
-        for idx, (peer_id, info) in enumerate(peers.items()):
-            print(f"{idx}: {peer_id} @ {info['ip']}:{info['port']} - Files: {', '.join(info['files'])}")
+        # print("Available peers:")
+        # for idx, (peer_id, info) in enumerate(peers.items()):
+        #     print(f"{idx}: {peer_id} @ {info['ip']}:{info['port']} - Files: {', '.join(info['files'])}")
 
         selected_peers = []
         for idx_str in selected_peer_indexes:
             try:
                 idx = int(idx_str.strip())
-                if idx < 0 or idx >= len(peer_ids):
-                    print(f"Index {idx} out of range. Skipping.")
-                    continue
+                # if idx < 0 or idx >= len(peer_ids):
+                #     print(f"Index {idx} out of range. Skipping.")
+                #     continue
                 peer_info = peers[peer_ids[idx]]
                 selected_peers.append({
                     "ip": peer_info['ip'],
@@ -386,9 +371,9 @@ def receive_file(use_multiple, selected_peer_indexes):
             except ValueError:
                 print(f"Invalid index: {idx_str}. Skipping.")
 
-        if not selected_peers:
-            print("No valid peers selected.")
-            return
+        # if not selected_peers:
+        #     print("No valid peers selected.")
+        #     return
 
         metadata = get_metadata_from_peer({
             "ip": selected_peers[0]["ip"],

@@ -1,0 +1,15 @@
+{
+  "file_name": "temp_1b3d5517de2f4907a86813ffa725ca82_a5.jpg",
+  "file_size": 64289,
+  "file_hash": "6abe3752f97e679d5118fac64eb8190a10f62f31d3485165fb2b0e9e5f6aedc7",
+  "total_chunks": 1,
+  "unique_chunks": 1,
+  "chunks": [
+    {
+      "index": 0,
+      "hash": "6abe3752f97e679d5118fac64eb8190a10f62f31d3485165fb2b0e9e5f6aedc7",
+      "size": 64289,
+      "source_index": 0
+    }
+  ]
+}
